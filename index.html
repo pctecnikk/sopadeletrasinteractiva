@@ -189,7 +189,7 @@ const THEMES={
 for(const k in THEMES)THEMES[k].w=THEMES[k].w.map(l=>({w:gw(l),label:l.toUpperCase()}));
 /* global theme: every word of every theme, without repeats */
 (function(){const seen=new Set(),all=[];for(const k in THEMES)for(const o of THEMES[k].w)if(!seen.has(o.w)){seen.add(o.w);all.push({...o,from:THEMES[k].n})}
-  THEMES.todo={n:"Toda España",ic:"🇪🇸",d:"Mezcla de todos los temas: "+all.length+" palabras",w:all,wide:true}})();
+  THEMES.todo={n:"Toda España",ic:"🌟",d:"Mezcla de todos los temas: "+all.length+" palabras",w:all,wide:true}})();
 const ORDER=["todo",...Object.keys(THEMES).filter(k=>k!=="todo")];
 const PRAISE=["¡Bien!","¡Genial!","¡Muy bien!","¡Eso es!","¡Olé!","¡Fantástico!"];
 const LVMAX=50,MAX_RENAMES=2;
@@ -376,7 +376,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="20261103-180322";
+const APP_VERSION="20261103-180501";
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
   $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
