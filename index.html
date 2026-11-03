@@ -225,11 +225,11 @@ function regenUI(){askBox("Se creará un código nuevo y <b>el anterior dejará 
   catch(e){setMsg("No se ha podido crear el código nuevo. Revisa la conexión.")}})}
 
 /* ---------- ranking ---------- */
-let top=[];
+let topList=[];
 function loadTop(){if(!ONLINE){$("top").innerHTML='<p class="note">La clasificación online no está activada.</p>';return}
-  rpc("sl_top",{p_limit:20}).then(r=>{top=Array.isArray(r)?r:[];renderTop()}).catch(()=>{$("top").innerHTML='<p class="note">No se ha podido cargar la clasificación.</p>'})}
+  rpc("sl_top",{p_limit:20}).then(r=>{topList=Array.isArray(r)?r:[];renderTop()}).catch(()=>{$("top").innerHTML='<p class="note">No se ha podido cargar la clasificación.</p>'})}
 function renderTop(){const m=["🥇","🥈","🥉"];
-  $("top").innerHTML=top.length?top.map((d,i)=>`<div class="wrow${P&&P.code&&d.name===P.name&&d.points===P.points?" me":""}"><span>${m[i]||(i+1)+"º"}</span><span class="n">${esc(d.name)}</span><span>${Number(d.points).toLocaleString("es-ES")} pts</span></div>`).join(""):'<p class="note">Todavía no hay nadie. Pulsa «Guardar online» y sé la primera persona.</p>'}
+  $("top").innerHTML=topList.length?topList.map((d,i)=>`<div class="wrow${P&&P.code&&d.name===P.name&&d.points===P.points?" me":""}"><span>${m[i]||(i+1)+"º"}</span><span class="n">${esc(d.name)}</span><span>${Number(d.points).toLocaleString("es-ES")} pts</span></div>`).join(""):'<p class="note">Todavía no hay nadie. Pulsa «Guardar online» y sé la primera persona.</p>'}
 
 /* ---------- sound ---------- */
 let ac=null;function A(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
@@ -319,7 +319,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="20261103-175719";
+const APP_VERSION="20261103-175849";
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
   $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
