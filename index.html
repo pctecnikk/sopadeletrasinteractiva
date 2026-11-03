@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Sopa de letras interactiva con temas de España: 50 niveles, puntos y clasificación online.">
+<meta name="theme-color" content="#14213d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sopa de letras">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Sopa de letras interactiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;700;900&family=JetBrains+Mono:wght@700;800&display=swap">
+<style>
+/* Layout: one column — big title, player card, theme tiles or the game, ranking.
+   Palette: deep navy board, Spanish red and saffron yellow as accents. */
+:root{
+  --bg:#0f1830; --panel:#18233f; --tile:#1f2c4f; --ink:#f6f2e8; --muted:#a9b3cc;
+  --red:#e63946; --gold:#ffc23a; --good:#4cc38a; --bad:#ff6b6b; --line:rgba(246,242,232,.18);
+  --display:"Bricolage Grotesque","Arial Black",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background-image:linear-gradient(180deg,rgba(230,57,70,.16),transparent 220px);background-repeat:no-repeat}
+.wrap{max-width:640px;margin:0 auto;padding-block:18px 48px;display:flex;flex-direction:column;gap:18px}
+header{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,8.5vw,56px);line-height:1;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 .tiles{display:inline-flex;gap:.08em}
+h1 .t{display:inline-grid;place-items:center;width:1.05em;height:1.15em;border-radius:.16em;background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:.8em}
+h1 .t.r{background:var(--red);color:#fff}
+h1 .t.y{background:var(--gold);color:#3a2600}
+.sub{font-family:var(--display);font-weight:800;color:var(--gold);font-size:clamp(16px,4.4vw,24px);letter-spacing:.02em}
+h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;color:var(--gold)}
+.note{font-size:14px;color:var(--muted);line-height:1.5;margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:900;border:0;border-radius:999px;padding:12px 20px;cursor:pointer;background:var(--gold);color:#3a2600;touch-action:manipulation}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line);font-weight:700;padding:9px 16px;font-size:15px}
+.btn:disabled{opacity:.45;cursor:default}
+.linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--gold);cursor:pointer;text-decoration:underline;padding:4px}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.nrow{display:flex;gap:8px}
+.nrow input{flex:1;min-width:0;font:inherit;font-size:17px;padding:11px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.code{font-family:var(--mono);font-size:19px;letter-spacing:.06em;color:var(--gold);user-select:all;-webkit-user-select:all}
+.msg{color:var(--gold);font-weight:700}
+details summary{cursor:pointer;font-weight:700;color:var(--gold)}
+details[open] summary{margin-bottom:8px}
+.opts{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+/* themes */
+.themes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.theme{font:inherit;color:var(--ink);text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:border-color .15s,transform .1s}
+.theme:hover{border-color:var(--gold)}
+.theme:active{transform:scale(.98)}
+.theme .ico{font-size:30px;line-height:1}
+.theme b{font-size:18px}
+.theme span{color:var(--muted);font-size:13px}
+.theme .lvtag{color:var(--gold);font-weight:800}
+/* game */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:6px;z-index:5}
+.backbtn{font:inherit;font-weight:900;font-size:16px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;min-height:44px}
+.strip{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.strip b{color:var(--gold)}
+.lv{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.lvlabel{font-weight:900;min-width:7.5em;text-align:center}
+.lvlabel b{color:var(--gold);font-size:20px}
+.ws{display:grid;gap:3px;width:100%;max-width:min(560px,calc(100dvh - 250px));margin:0 auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:contain;background:var(--panel);padding:6px;border-radius:14px}
+.cell{aspect-ratio:1;min-width:0;border-radius:5px;background:var(--tile);color:var(--ink);font-family:var(--mono);font-weight:800;font-size:clamp(11px,calc(min(560px,100vw - 44px) / var(--n,10) * .5),26px);display:grid;place-items:center;cursor:pointer}
+.cell.start,.cell.sel{background:var(--gold);color:#3a2600}
+.cell.found{color:#14213d}
+.cell.hint{box-shadow:inset 0 0 0 3px var(--gold)}
+.wlist{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.wlist span{padding:6px 12px;border-radius:999px;border:2px solid var(--line);font-weight:900;font-size:14px;letter-spacing:.03em}
+.wlist span.found{text-decoration:line-through;opacity:.75}
+.bubble{background:var(--panel);border-left:4px solid var(--red);border-radius:12px;padding:12px 14px;line-height:1.45;min-height:3.2em}
+.wrow{display:grid;grid-template-columns:2.2em 1fr auto;gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.wrow:last-child{border-bottom:0}
+.wrow.me{color:var(--gold);font-weight:900}
+.wrow .n{min-width:0;overflow-wrap:anywhere}
+.update{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;background:var(--gold);color:#3a2600;font-weight:800;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.update button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:10px 18px;background:#3a2600;color:var(--gold);cursor:pointer}
+@media (min-width:1000px){
+  .wrap{max-width:1140px}
+  .themes{grid-template-columns:repeat(3,1fr)}
+  .play{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+  .ws{max-width:min(720px,calc(100dvh - 210px))}
+  .cell{font-size:calc(min(720px,100dvh - 210px) / var(--n,10) * .48)}
+  .bubble,.wlist span{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <h1 aria-label="Sopa de letras interactiva"><span class="tiles" aria-hidden="true"><span class="t r">S</span><span class="t">O</span><span class="t y">P</span><span class="t">A</span></span> de letras</h1>
+    <span class="sub">interactiva</span>
+    <p class="note">Temas de España · 50 niveles por tema · clasificación online</p>
+  </header>
+
+  <section class="card" id="player"></section>
+
+  <section id="vThemes">
+    <h2 style="margin-bottom:12px">Elige un tema</h2>
+    <div class="themes" id="themes"></div>
+  </section>
+
+  <section id="vGame" hidden>
+    <div class="topbar"><button class="backbtn" id="back" type="button">← Temas</button><h2 id="gTitle"></h2></div>
+    <div class="lv" id="lv" style="margin-top:10px"></div>
+    <div class="play" style="margin-top:12px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="strip"><span id="count"></span><span>Puntos: <b id="pts">0</b></span><button class="btn ghost" id="hint" type="button">💡 Pista</button></div>
+        <div class="ws" id="grid"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="bubble" id="bubble" aria-live="polite"></div>
+        <div class="wlist" id="words"></div>
+        <p class="note" id="dirs"></p>
+        <div class="row" style="justify-content:center"><button class="btn red" id="again" type="button" hidden>Siguiente nivel</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="ranking"><h2>🏆 Clasificación</h2><div id="top"><p class="note">Cargando…</p></div></section>
+</div>
+<div class="update" id="upd" hidden role="status"><span>✨ Hay una versión nueva. Tu progreso no se pierde.</span><button id="updGo" type="button">Actualizar</button><button id="updLater" type="button">Luego</button></div>
+
+<script src="supabase-config.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+/* grid form of a word: capitals, no accents or spaces, but keeping Ñ */
+function gw(s){return String(s).toUpperCase().replace(/Ñ/g,"\u0001").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\u0001/g,"Ñ").replace(/[^A-ZÑ]/g,"")}
+
+/* ---------- themes of Spain ---------- */
+const THEMES={
+  comunidades:{n:"Comunidades",ic:"🗺️",d:"Las comunidades autónomas",w:["Andalucía","Aragón","Asturias","Baleares","Canarias","Cantabria","Cataluña","Extremadura","Galicia","Madrid","Murcia","Navarra","La Rioja","Euskadi","Valencia","Ceuta","Melilla","Castilla"]},
+  ciudades:{n:"Ciudades",ic:"🏙️",d:"Capitales y grandes ciudades",w:["Madrid","Barcelona","Valencia","Sevilla","Zaragoza","Málaga","Murcia","Palma","Bilbao","Alicante","Córdoba","Valladolid","Vigo","Gijón","Granada","Oviedo","Santander","Pamplona","Toledo","Salamanca","Cádiz","Burgos","León","Logroño","Segovia","Cáceres","Huesca","Teruel"]},
+  comida:{n:"Comida",ic:"🥘",d:"Platos típicos para chuparse los dedos",w:["Paella","Tortilla","Gazpacho","Salmorejo","Croquetas","Jamón","Chorizo","Churros","Pulpo","Fabada","Cocido","Turrón","Polvorón","Migas","Pisto","Alioli","Calamares","Gambas","Tapas","Queso","Aceite","Horchata","Ensaimada","Torrijas"]},
+  fiestas:{n:"Fiestas y tradiciones",ic:"🎉",d:"Ferias, bailes y costumbres",w:["Fallas","San Fermín","Feria","Romería","Carnaval","Tomatina","Verbena","Cabalgata","Campanadas","Nochebuena","Flamenco","Sevillanas","Jota","Sardana","Muñeira","Castellers","Roscón","Belén","Tamborrada","Uvas"]},
+  monumentos:{n:"Monumentos",ic:"🏰",d:"Lugares que hay que visitar",w:["Alhambra","Mezquita","Giralda","Acueducto","Alcázar","Prado","Cibeles","Escorial","Guggenheim","Catedral","Muralla","Montserrat","Alcazaba","Plaza Mayor","Sagrada Familia","Covadonga","Lonja","Casa Batlló","Park Güell"]},
+  naturaleza:{n:"Naturaleza",ic:"🏔️",d:"Ríos, montañas, mares y parques",w:["Ebro","Tajo","Duero","Guadiana","Guadalquivir","Miño","Segura","Júcar","Pirineos","Teide","Mulhacén","Doñana","Albufera","Mediterráneo","Cantábrico","Atlántico","Sierra","Meseta","Islas","Playa","Volcán","Dehesa","Picos de Europa"]},
+  animales:{n:"Animales",ic:"🦅",d:"Fauna de nuestros campos y mares",w:["Lince","Oso","Lobo","Cigüeña","Buitre","Águila","Toro","Cabra","Jabalí","Ciervo","Zorro","Erizo","Camaleón","Flamenco","Gallo","Burro","Atún","Sardina","Boquerón","Pulpo","Mejillón","Perdiz","Urogallo"]},
+  deportes:{n:"Deportes",ic:"⚽",d:"Los deportes que más se practican",w:["Fútbol","Baloncesto","Tenis","Pádel","Ciclismo","Balonmano","Natación","Atletismo","Waterpolo","Pelota","Vela","Surf","Esquí","Golf","Voleibol","Piragüismo","Hockey","Rugby","Judo","Kárate","Taekwondo","Remo","Motociclismo"]},
+  cultura:{n:"Arte y cultura",ic:"🎨",d:"Pintores, escritores y símbolos",w:["Quijote","Sancho Panza","Cervantes","Goya","Velázquez","Picasso","Dalí","Miró","Gaudí","Lorca","Guitarra","Castañuelas","Abanico","Mantilla","Siesta","Paellera","Botijo","Peineta","Zarzuela","Sorolla","Murillo","Machado"]}
+};
+for(const k in THEMES)THEMES[k].w=THEMES[k].w.map(l=>({w:gw(l),label:l.toUpperCase()}));
+const PRAISE=["¡Bien!","¡Genial!","¡Muy bien!","¡Eso es!","¡Olé!","¡Fantástico!"];
+const LVMAX=50,MAX_RENAMES=2;
+
+/* ---------- player (this device, and online with a code) ---------- */
+const LS="sopa-interactiva-v1";
+function norm(p){p=p||{};return{name:String(p.name||"").slice(0,16),code:typeof p.code==="string"&&/^SL-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(p.code)?p.code:undefined,
+  points:Math.max(0,Math.round(+p.points||0)),levels:(p.levels&&typeof p.levels==="object")?p.levels:{},found:Math.max(0,+p.found||0),renames:Math.max(0,Math.min(99,+p.renames||0)),updated:+p.updated||0}}
+let P=null;try{const j=JSON.parse(localStorage.getItem(LS)||"null");if(j&&j.name)P=norm(j)}catch(e){}
+function saveLocal(){try{if(P)localStorage.setItem(LS,JSON.stringify(P));else localStorage.removeItem(LS)}catch(e){}}
+
+const C=window.SUPABASE_CONFIG;const ONLINE=!!(C&&C.url&&C.key);
+function rpc(fn,args){if(!ONLINE)return Promise.reject(new Error("sin conexión online"));
+  const h={"Content-Type":"application/json",apikey:C.key};if(/^eyJ/.test(C.key))h.Authorization="Bearer "+C.key;
+  return fetch(C.url.replace(/\/+$/,"")+"/rest/v1/rpc/"+fn,{method:"POST",headers:h,body:JSON.stringify(args||{})})
+    .then(async r=>{const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}if(!r.ok)throw new Error((j&&j.message)||("HTTP "+r.status));return j})}
+let saveT=null;
+function saveOnline(){if(!P||!P.code)return;clearTimeout(saveT);const me=P;saveT=setTimeout(()=>{
+  rpc("sl_save",{p_code:me.code,p_name:me.name,p_points:me.points,p_data:{levels:me.levels,found:me.found}}).then(ok=>{
+    if(ok===false&&P===me){P.code=undefined;saveLocal();setMsg("Tu código ha cambiado en otro dispositivo o ya no existe. Recupéralo con «¿Ya tienes un código?».")}loadTop()}).catch(()=>{})},800)}
+function save(){P.updated=Date.now();saveLocal();saveOnline()}
+let msg="";function setMsg(t){msg=t;renderPlayer()}
+const normCode=c=>String(c||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^SL/,"").replace(/^(.{4})(.{4}).*$/,"SL-$1-$2");
+
+function haveCodeUI(){return `<details><summary>¿Ya tienes un código?</summary><div class="nrow"><input id="cIn" maxlength="14" placeholder="SL-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn" id="cLoad" type="button">Recuperar</button></div></details>`}
+function renderPlayer(){
+  const el=$("player");let h="";
+  if(!P){
+    h=`<b>¿Cómo te llamas?</b><div class="nrow"><input id="pName" maxlength="16" placeholder="Tu nombre de jugador" autocomplete="off"><button class="btn" id="pGo" type="button">¡A jugar!</button></div>`+(ONLINE?haveCodeUI():"");
+  }else{
+    h=`<div class="row" style="justify-content:space-between"><span>Juega <b id="pN"></b> · <b style="color:var(--gold)">${P.points.toLocaleString("es-ES")}</b> puntos</span></div>`;
+    if(P.code)h+=`<div class="row"><span class="note">Tu código:</span><span class="code" id="pCode"></span><button class="btn ghost" id="cCopy" type="button">Copiar</button></div><p class="note">Apúntalo: con él recuperas tus puntos en cualquier móvil u ordenador.</p>`;
+    else if(ONLINE)h+=`<div class="row"><button class="btn red" id="cCreate" type="button">🌍 Guardar online y salir en la clasificación</button></div>`+haveCodeUI();
+    const left=MAX_RENAMES-P.renames;
+    h+=`<details id="opts"><summary>⚙️ Opciones del jugador</summary><div class="opts" id="optBox">`+
+      (left>0?`<button class="linkbtn" id="oRen" type="button">✏️ Cambiar nombre (${left===1?"te queda 1 cambio":"te quedan "+left+" cambios"})</button>`:`<span class="note">🔒 Nombre definitivo: ya se ha cambiado ${MAX_RENAMES} veces.</span>`)+
+      (P.code?`<button class="linkbtn" id="oRegen" type="button">🔄 Generar un código nuevo</button>`:"")+
+      `<button class="linkbtn" id="oSwitch" type="button">👥 Jugar con otro nombre en este dispositivo</button>`+
+      `<button class="linkbtn" id="oDel" type="button" style="color:var(--bad)">🗑️ Borrar este jugador</button></div></details>`;
+  }
+  if(msg)h+=`<p class="note msg" id="pMsg" role="status"></p>`;
+  el.innerHTML=h;if(msg)$("pMsg").textContent=msg;
+  if($("pN"))$("pN").textContent=P.name;if($("pCode"))$("pCode").textContent=P.code;
+  if($("pGo")){const go=()=>{const n=$("pName").value.trim().slice(0,16);if(!n){setMsg("Escribe tu nombre primero.");return}P=norm({name:n,updated:Date.now()});saveLocal();msg="";renderPlayer();renderThemes()};$("pGo").onclick=go;$("pName").addEventListener("keydown",e=>{if(e.key==="Enter")go()})}
+  if($("cCopy"))$("cCopy").onclick=()=>{try{navigator.clipboard.writeText(P.code).then(()=>{$("cCopy").textContent="¡Copiado!"},()=>{})}catch(e){}};
+  if($("cCreate"))$("cCreate").onclick=async()=>{$("cCreate").disabled=true;try{const r=await rpc("sl_create",{p_name:P.name});P.code=r.code;save();msg="¡Código creado! Apúntalo bien: con él recuperas tus puntos en cualquier dispositivo.";renderPlayer();loadTop()}catch(e){$("cCreate").disabled=false;setMsg("No se ha podido crear el código. Revisa la conexión.")}};
+  if($("cLoad")){const load=async()=>{const code=normCode($("cIn").value);if(!/^SL-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){setMsg("Escribe el código completo, por ejemplo SL-7K3Q-9XPA.");return}
+      try{const r=await rpc("sl_load",{p_code:code});if(!r){setMsg("No existe ningún jugador con ese código.");return}
+        const d=r.data||{};P=norm({name:r.name,code,points:r.points,levels:d.levels,found:d.found,renames:r.renames,updated:Date.now()});saveLocal();msg="¡Recuperado! Hola, "+r.name+".";renderPlayer();renderThemes();loadTop()}
+      catch(e){setMsg("No se ha podido recuperar. Revisa la conexión.")}};
+    $("cLoad").onclick=load;$("cIn").addEventListener("keydown",e=>{if(e.key==="Enter")load()})}
+  if($("oRen"))$("oRen").onclick=renameUI;
+  if($("oRegen"))$("oRegen").onclick=regenUI;
+  if($("oSwitch"))$("oSwitch").onclick=()=>{askBox(`Vas a jugar con otro nombre. ${P.code?"Apunta antes tu código ("+esc(P.code)+") para poder recuperar a "+esc(P.name)+" después.":"Los puntos de "+esc(P.name)+" no tienen código y se perderán en este dispositivo."}`,"Sí, cambiar",()=>{msg="";P=null;saveLocal();showThemes();renderPlayer()})};
+  if($("oDel"))$("oDel").onclick=()=>{askBox(`¿Seguro que quieres borrar a <b>${esc(P.name)}</b>? Se perderán sus puntos y niveles${P.code?", y saldrá de la clasificación":""}. No se puede deshacer.`,"Sí, borrar",async()=>{
+      if(P.code){try{await rpc("sl_delete",{p_code:P.code})}catch(e){setMsg("No se ha podido borrar online. Revisa la conexión.");return}}
+      msg="Jugador borrado.";P=null;saveLocal();showThemes();renderPlayer();loadTop()},true)};
+}
+function askBox(html,okText,fn,danger){const b=$("optBox");if(!b)return;
+  b.innerHTML=`<p class="note" style="color:var(--ink)">${html}</p><div class="row"><button class="btn ${danger?"red":""}" id="aOk" type="button">${okText}</button><button class="btn ghost" id="aNo" type="button">Cancelar</button></div>`;
+  $("aNo").onclick=()=>renderPlayer();$("aOk").onclick=()=>{$("aOk").disabled=true;fn()}}
+function renameUI(){const b=$("optBox");if(!b||P.renames>=MAX_RENAMES)return;const left=MAX_RENAMES-P.renames;
+  b.innerHTML=`<label class="note" for="rIn">Nuevo nombre (máximo 16 letras). ${left===1?"Es tu último cambio.":"Solo puedes cambiarlo "+MAX_RENAMES+" veces en total."}</label><div class="nrow" style="width:100%"><input id="rIn" maxlength="16" autocomplete="off"><button class="btn" id="rOk" type="button">Guardar</button></div><button class="linkbtn" id="rNo" type="button">Cancelar</button>`;
+  const i=$("rIn");i.value=P.name;i.focus();
+  const ok=()=>{const n=i.value.trim().slice(0,16);if(!n||n===P.name){renderPlayer();return}P.name=n;P.renames++;save();msg=`¡Listo! Ahora te llamas ${n}.`;renderPlayer()};
+  $("rOk").onclick=ok;i.addEventListener("keydown",e=>{if(e.key==="Enter")ok()});$("rNo").onclick=()=>renderPlayer()}
+function regenUI(){askBox("Se creará un código nuevo y <b>el anterior dejará de funcionar</b>. Tus puntos y tu puesto se mantienen. En tus otros dispositivos tendrás que poner el código nuevo.","Sí, código nuevo",async()=>{
+  try{const r=await rpc("sl_regen",{p_code:P.code});if(!r||!r.code){setMsg("Ese código ya no existe en el servidor.");return}P.code=r.code;save();msg="¡Código nuevo creado! Apúntalo bien.";renderPlayer()}
+  catch(e){setMsg("No se ha podido crear el código nuevo. Revisa la conexión.")}})}
+
+/* ---------- ranking ---------- */
+let top=[];
+function loadTop(){if(!ONLINE){$("top").innerHTML='<p class="note">La clasificación online no está activada.</p>';return}
+  rpc("sl_top",{p_limit:20}).then(r=>{top=Array.isArray(r)?r:[];renderTop()}).catch(()=>{$("top").innerHTML='<p class="note">No se ha podido cargar la clasificación.</p>'})}
+function renderTop(){const m=["🥇","🥈","🥉"];
+  $("top").innerHTML=top.length?top.map((d,i)=>`<div class="wrow${P&&P.code&&d.name===P.name&&d.points===P.points?" me":""}"><span>${m[i]||(i+1)+"º"}</span><span class="n">${esc(d.name)}</span><span>${Number(d.points).toLocaleString("es-ES")} pts</span></div>`).join(""):'<p class="note">Todavía no hay nadie. Pulsa «Guardar online» y sé la primera persona.</p>'}
+
+/* ---------- sound ---------- */
+let ac=null;function A(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
+function tone(f,t,d,type,v){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d+.05)}
+const SFX={ok(){if(!A())return;const t=ac.currentTime;[523,659,784,1047].forEach((f,k)=>tone(f,t+k*.07,.12,"square",.06))},bad(){if(!A())return;tone(260,ac.currentTime,.25,"sawtooth",.05)},tick(){if(!A())return;tone(880,ac.currentTime,.05,"triangle",.07)},win(){if(!A())return;const t=ac.currentTime;[523,659,784,1047,1319].forEach((f,k)=>tone(f,t+k*.1,.25,"triangle",.08))}};
+
+/* ---------- themes & levels ---------- */
+let theme=null;const pick={};
+function lvUnlocked(th){return Math.min(LVMAX,Math.max(1,(P&&P.levels[th])||1))}
+function renderThemes(){$("themes").innerHTML=Object.keys(THEMES).map(k=>{const t=THEMES[k];return `<button class="theme" id="th-${k}" type="button" data-th="${k}"><span class="ico">${t.ic}</span><b>${t.n}</b><span>${t.d}</span><span class="lvtag">Nivel ${lvUnlocked(k)} de ${LVMAX}</span></button>`}).join("")}
+$("themes").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(!b)return;if(!P){setMsg("Primero escribe tu nombre aquí arriba.");$("pName")&&$("pName").focus();window.scrollTo({top:0,behavior:"smooth"});return}A();theme=b.dataset.th;startGame()});
+function showThemes(){$("vGame").hidden=true;$("vThemes").hidden=false;renderThemes();try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}ping()}
+$("back").onclick=()=>{try{if(location.hash==="#jugando"){history.back();setTimeout(()=>{if(!$("vGame").hidden)showThemes()},400);return}}catch(e){}showThemes()};
+window.addEventListener("popstate",()=>{if(!$("vGame").hidden)showThemes()});
+function cfg(lv){const ALL=[[1,0],[0,1],[1,1],[-1,0],[0,-1],[-1,-1],[1,-1],[-1,1]];
+  const dirs=lv<=2?[[1,0],[0,1]]:lv<=4?[[1,0],[0,1],[1,1]]:lv<=6?[[1,0],[0,1],[1,1],[-1,0],[0,-1]]:ALL;
+  const txt=lv<=2?"Las palabras van hacia la derecha o hacia abajo.":lv<=4?"Las palabras van hacia la derecha, hacia abajo o en diagonal.":lv<=6?"Las palabras van en línea recta o en diagonal, ¡y algunas al revés!":"Las palabras van en todas las direcciones, también al revés.";
+  const decoy=Math.max(0,Math.min(8,Math.floor((lv-3)/2)));
+  return{n:Math.min(14,9+Math.ceil(lv/2)),w:5+lv,dirs,hints:lv<=3?99:Math.max(0,4-Math.floor(lv/4)),decoy,txt:txt+(decoy?" Cuidado: hay palabras trampa a medio escribir.":"")}}
+function renderLv(){const u=lvUnlocked(theme),lv=S.level,el=$("lv");
+  el.innerHTML=`<button class="btn ghost" id="lvPrev" type="button" aria-label="Nivel anterior"${lv<=1?" disabled":""}>◀</button><span class="lvlabel">Nivel <b>${lv}</b> <small class="note">de ${LVMAX}</small></span><button class="btn ghost" id="lvNext" type="button" aria-label="Nivel siguiente"${lv>=u?" disabled":""}>${lv>=u&&u<LVMAX?"🔒":"▶"}</button>${u>lv+1?`<button class="btn ghost" id="lvMax" type="button">Ir al ${u} ⏩</button>`:""}`;
+  $("lvPrev").onclick=()=>{pick[theme]=lv-1;startGame()};$("lvNext").onclick=()=>{pick[theme]=lv+1;startGame()};if($("lvMax"))$("lvMax").onclick=()=>{pick[theme]=u;startGame()}}
+
+/* ---------- the word search ---------- */
+const COLS=["#ffc23a","#ff8fa3","#7fd8ff","#4cc38a","#ffa94d","#c3a6ff","#ff6b6b"];
+const S={grid:[],words:[],found:[],start:-1,cellCol:{},n:10,level:1,hints:0,drag:null};
+function place(o,dirs){const n=S.n,L=o.w.length;for(let t=0;t<400;t++){const [dx,dy]=rnd(dirs),x0=Math.floor(Math.random()*n),y0=Math.floor(Math.random()*n),x1=x0+dx*(L-1),y1=y0+dy*(L-1);
+  if(x1<0||x1>=n||y1<0||y1>=n)continue;let fit=true;for(let k=0;k<L;k++){const ch=S.grid[(y0+dy*k)*n+x0+dx*k];if(ch&&ch!==o.w[k]){fit=false;break}}
+  if(fit){for(let k=0;k<L;k++)S.grid[(y0+dy*k)*n+x0+dx*k]=o.w[k];o.first=y0*n+x0;return true}}return false}
+function startGame(){
+  const u=lvUnlocked(theme),lv=pick[theme]&&pick[theme]<=u?pick[theme]:u,c=cfg(lv);S.level=lv;S.n=c.n;S.hints=c.hints;
+  const pool=THEMES[theme].w.filter(o=>o.w.length<=S.n);const want=Math.min(pool.length,c.w);
+  let ok=false,tries=0;
+  while(!ok&&tries<60){tries++;ok=true;S.grid=Array(S.n*S.n).fill("");S.words=shuffle(pool).slice(0,want).map(o=>({...o})).sort((a,b)=>b.w.length-a.w.length);for(const o of S.words){if(!place(o,c.dirs)){ok=false;break}}}
+  if(!ok)S.words=S.words.filter(o=>o.first!==undefined);
+  if(c.decoy){const dp=shuffle(pool.filter(o=>o.w.length>=6));for(let k=0;k<c.decoy*2&&dp.length;k++){const src=dp[k%dp.length];place({w:src.w.slice(0,3+Math.floor(Math.random()*2))},c.dirs)}}
+  const used=S.words.map(o=>o.w).join(""),AL="ABCDEFGHIJLMNOPQRSTUVXYZ";
+  S.grid=S.grid.map(ch=>ch||(c.decoy&&Math.random()<.6?used[Math.floor(Math.random()*used.length)]:AL[Math.floor(Math.random()*AL.length)]));
+  S.found=[];S.start=-1;S.cellCol={};S.drag=null;
+  $("vThemes").hidden=true;$("vGame").hidden=false;$("gTitle").textContent=THEMES[theme].ic+" "+THEMES[theme].n;$("again").hidden=true;
+  $("dirs").textContent=c.txt+" Desliza el dedo desde la primera letra hasta la última, o toca la primera y después la última.";
+  const g=$("grid");g.style.gridTemplateColumns=`repeat(${S.n},1fr)`;g.style.setProperty("--n",S.n);g.innerHTML="";
+  S.grid.forEach((ch,i)=>{const d=document.createElement("div");d.className="cell";d.id="c"+i;d.dataset.i=i;d.textContent=ch;g.appendChild(d)});
+  try{if(location.hash!=="#jugando")history.pushState(null,"","#jugando")}catch(e){}
+  renderLv();update();$("bubble").textContent=`Nivel ${lv}: hay ${S.words.length} palabras escondidas. Cada una vale ${pts()} puntos. ¡A buscar!`;window.scrollTo({top:0,behavior:"smooth"});ping();
+}
+function pts(){return 8+2*S.level}
+function update(){
+  S.grid.forEach((_,i)=>{const d=$("c"+i);d.classList.remove("sel");d.classList.toggle("found",!!S.cellCol[i]);d.classList.toggle("start",S.start===i);d.style.background=S.start===i?"":(S.cellCol[i]||"")});
+  $("words").innerHTML=S.words.map((o,k)=>{const f=S.found.includes(o);return `<span class="${f?"found":""}" style="border-color:${f?COLS[k%COLS.length]:"var(--line)"}">${esc(o.label)}</span>`}).join("");
+  $("count").textContent=`${S.found.length} de ${S.words.length} palabras`;$("pts").textContent=(P?P.points:0).toLocaleString("es-ES");
+  const h=$("hint");h.textContent=S.hints>5?"💡 Pista":S.hints>0?`💡 Pista (${S.hints})`:"💡 Sin pistas";h.disabled=S.hints<=0||S.found.length===S.words.length;
+}
+function line(a,b){const n=S.n,ax=a%n,ay=Math.floor(a/n),bx=b%n,by=Math.floor(b/n);if(!(ax===bx||ay===by||Math.abs(bx-ax)===Math.abs(by-ay)))return null;const dx=Math.sign(bx-ax),dy=Math.sign(by-ay),len=Math.max(Math.abs(bx-ax),Math.abs(by-ay))+1,c=[];for(let k=0;k<len;k++)c.push((ay+dy*k)*n+ax+dx*k);return c}
+function preview(a,b){update();(line(a,b)||[a]).forEach(i=>{const d=$("c"+i);d.classList.add("sel");d.style.background=""})}
+function check(a,b){
+  const cells=line(a,b);
+  if(cells){const word=cells.map(c=>S.grid[c]).join(""),rev=[...word].reverse().join("");const hit=S.words.find(o=>!S.found.includes(o)&&(o.w===word||o.w===rev));
+    if(hit){S.found.push(hit);const col=COLS[S.words.indexOf(hit)%COLS.length];cells.forEach(c=>S.cellCol[c]=col);SFX.ok();
+      P.points+=pts();P.found++;save();update();$("bubble").textContent=`${rnd(PRAISE)} Has encontrado ${hit.label}. +${pts()} puntos.`;
+      if(S.found.length===S.words.length)setTimeout(win,300);return}}
+  SFX.bad();update();$("bubble").textContent="Esa no es. ¡Prueba otra vez!";
+}
+function win(){
+  const lv=S.level,next=Math.min(LVMAX,lv+1),bonus=20+lv*5;pick[theme]=null;P.points+=bonus;if((P.levels[theme]||1)<next)P.levels[theme]=next;save();SFX.win();update();
+  $("bubble").textContent=lv<LVMAX?`¡Nivel ${lv} superado! Ganas ${bonus} puntos extra y desbloqueas el nivel ${next}, que será un poco más difícil.`:`¡Increíble! Has superado el nivel más difícil de este tema. +${bonus} puntos.`;
+  $("again").hidden=false;$("again").textContent=lv<LVMAX?`Jugar el nivel ${next}`:"Jugar otra vez";renderLv();
+}
+$("again").onclick=startGame;
+$("hint").onclick=()=>{if(S.hints<=0||S.found.length===S.words.length)return;const o=S.words.find(x=>!S.found.includes(x));if(!o)return;S.hints--;S.start=-1;update();const d=$("c"+o.first);d.classList.add("hint");setTimeout(()=>d.classList.remove("hint"),2500);SFX.tick();$("bubble").textContent=`Pista: ${o.label} empieza en la letra marcada.`};
+function cellAt(e){const el=document.elementFromPoint(e.clientX,e.clientY);const c=el&&el.closest?el.closest("#grid .cell"):null;return c?+c.dataset.i:-1}
+const G=$("grid");
+G.addEventListener("pointerdown",e=>{if(S.found.length===S.words.length)return;const i=cellAt(e);if(i<0)return;e.preventDefault();A();
+  if(S.start>=0&&S.start!==i){const a=S.start;S.start=-1;check(a,i);return}
+  if(S.start===i){S.start=-1;update();return}
+  S.drag={from:i,to:i};try{G.setPointerCapture(e.pointerId)}catch(err){}preview(i,i)});
+G.addEventListener("pointermove",e=>{if(!S.drag)return;e.preventDefault();const i=cellAt(e);if(i>=0&&i!==S.drag.to){S.drag.to=i;preview(S.drag.from,i)}});
+G.addEventListener("pointerup",()=>{if(!S.drag)return;const {from,to}=S.drag;S.drag=null;if(from===to){S.start=from;SFX.tick();update()}else check(from,to)});
+G.addEventListener("pointercancel",()=>{S.drag=null;update()});
+G.addEventListener("touchmove",e=>e.preventDefault(),{passive:false});
+
+/* ---------- owner's "who is playing" ping (nothing is shown to players) ---------- */
+let sid=null;try{sid=sessionStorage.getItem("sl-sid")}catch(e){}
+if(!sid){sid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);try{sessionStorage.setItem("sl-sid",sid)}catch(e){}}
+function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden?"Eligiendo tema":THEMES[theme].n+" · nivel "+S.level;
+  rpc("sl_ping",{p_session:sid,p_name:P?P.name:null,p_place:place.slice(0,40),p_code:!!(P&&P.code)}).catch(()=>{})}
+setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
+
+/* ---------- new version notice ---------- */
+const APP_VERSION="20261103-175719";
+(function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
+  function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
+  $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
+  $("updLater").onclick=()=>{$("upd").hidden=true;snooze=Date.now()+600000};
+  setTimeout(chk,5000);setInterval(chk,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()})})();
+
+/* ---------- start ---------- */
+try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+renderPlayer();renderThemes();loadTop();
+if(P&&P.code)rpc("sl_load",{p_code:P.code}).then(r=>{if(!r)return;if(r.name!==P.name||r.renames!==P.renames){P.name=r.name;P.renames=Math.max(P.renames,r.renames||0);saveLocal();renderPlayer()}}).catch(()=>{});
+</script>
+</body></html>
