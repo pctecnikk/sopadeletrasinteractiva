@@ -292,9 +292,9 @@ function fitGrid(){
   const g=$("grid");if(!g||$("vGame").hidden)return;
   const col=$("gridCol"),z=UIZ;
   const colW=col.getBoundingClientRect().width/z;                      // room across
-  const above=(g.getBoundingClientRect().top-$("vGame").getBoundingClientRect().top)/z;
+  const above=(g.getBoundingClientRect().top+window.scrollY)/z;          // everything above the grid, from the top of the page
   const vh=(window.visualViewport?visualViewport.height:innerHeight)/z;
-  const availH=vh-above-16;                                          // room down, once the game is at the top
+  const availH=vh-above-14;                                          // room down, with the page scrolled to the top
   const side=window.matchMedia("(min-width:700px) and (orientation:landscape), (min-width:1000px)").matches;
   let size=side?Math.min(colW,availH):Math.min(colW,Math.max(availH,Math.min(colW,300)));
   size=Math.max(220,Math.min(size,1100));
@@ -371,7 +371,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="20261103-180054";
+const APP_VERSION="20261103-180224";
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
   $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
