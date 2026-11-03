@@ -30,7 +30,7 @@ Supabase → **Table Editor** → **sopa_jugando_ahora**. Salen las personas que
 
 ## Avisar de una versión nueva
 
-La web consulta `version.json` cada minuto. Si cambias `index.html` a mano, cambia también el número de `version.json` y el de `APP_VERSION` en `index.html` (los dos iguales; por ejemplo, la fecha y la hora: `{"version":"20261103-183000"}`). Ese número aparece al pie de la pantalla de temas como «Versión 3/11/2026 · 18:30», así se ve qué versión está funcionando.
+La web consulta `version.json` cada minuto. Cada versión nueva es una *release* de GitHub (v1.0.0, v1.1.0…). Si cambias `index.html` a mano, pon el mismo número en `APP_VERSION` (dentro de `index.html`) y en `version.json` (por ejemplo `{"version": "1.1.0"}`) y crea la release `v1.1.0`. Ese número aparece al pie de la pantalla de temas como «Versión 1.1.0», así se ve qué versión está funcionando.
 
 ## Archivos
 

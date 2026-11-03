@@ -379,9 +379,8 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="20261103-223000";
-(function(){const m=/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/.exec(APP_VERSION);
-  $("ver").textContent="Versión "+(m?`${+m[3]}/${+m[2]}/${m[1]} · ${m[4]}:${m[5]}`:APP_VERSION);$("ver").title=APP_VERSION})();
+const APP_VERSION="1.0.0";
+$("ver").textContent="Versión "+APP_VERSION;
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
   $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
