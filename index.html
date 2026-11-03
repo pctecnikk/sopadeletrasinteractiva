@@ -72,8 +72,8 @@ details[open] summary{margin-bottom:8px}
 .lv{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 .lvlabel{font-weight:900;min-width:7.5em;text-align:center}
 .lvlabel b{color:var(--gold);font-size:20px}
-.ws{display:grid;gap:3px;width:100%;max-width:min(560px,calc(100dvh - 250px));margin:0 auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:contain;background:var(--panel);padding:6px;border-radius:14px}
-.cell{aspect-ratio:1;min-width:0;border-radius:5px;background:var(--tile);color:var(--ink);font-family:var(--mono);font-weight:800;font-size:clamp(11px,calc(min(560px,100vw - 44px) / var(--n,10) * .5),26px);display:grid;place-items:center;cursor:pointer}
+.ws{display:grid;gap:clamp(2px,calc(var(--cell,32px) * .08),5px);width:100%;max-width:100%;margin:0 auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:contain;background:var(--panel);padding:6px;border-radius:14px}
+.cell{aspect-ratio:1;min-width:0;border-radius:5px;background:var(--tile);color:var(--ink);font-family:var(--mono);font-weight:800;font-size:clamp(10px,calc(var(--cell,32px) * .52),56px);display:grid;place-items:center;cursor:pointer}
 .cell.start,.cell.sel{background:var(--gold);color:#3a2600}
 .cell.found{color:#14213d}
 .cell.hint{box-shadow:inset 0 0 0 3px var(--gold)}
@@ -87,12 +87,43 @@ details[open] summary{margin-bottom:8px}
 .wrow .n{min-width:0;overflow-wrap:anywhere}
 .update{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;background:var(--gold);color:#3a2600;font-weight:800;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
 .update button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:10px 18px;background:#3a2600;color:var(--gold);cursor:pointer}
-@media (min-width:1000px){
-  .wrap{max-width:1140px}
+/* ===== every screen: phones, tablets, laptops, 2K/4K ===== */
+/* while playing, hide what is not needed so the grid gets the room */
+body.ingame #player,body.ingame #ranking,body.ingame header .note,body.ingame header .sub{display:none}
+body.ingame header h1{font-size:clamp(20px,5vw,30px)}
+body.ingame .wrap{gap:10px;padding-block:10px 24px}
+.play{display:flex;flex-direction:column;gap:12px}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+/* small phones */
+@media (max-width:360px){
+  body{font-size:16px}
+  .theme{padding:11px}.theme b{font-size:16px}.theme .ico{font-size:26px}
+  .wlist span{font-size:12px;padding:5px 9px}
+  .btn{padding:10px 16px}
+}
+/* tablets (portrait) and big phones */
+@media (min-width:600px){
+  .wrap{max-width:860px}
+  .themes{grid-template-columns:repeat(3,1fr);gap:12px}
+  .theme b{font-size:19px}
+  .bubble,.wlist span{font-size:16px}
+}
+/* landscape tablets, landscape phones and computers: grid on the left, words on the right */
+@media (min-width:700px) and (orientation:landscape), (min-width:1000px){
+  .play{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,34%);gap:20px;align-items:start}
+}
+/* phones turned sideways: very little height */
+@media (max-height:500px) and (orientation:landscape){
+  body.ingame header{display:none}
+  body.ingame .topbar{padding-block:2px}
+  body.ingame .lv{margin-top:4px!important}
   .themes{grid-template-columns:repeat(3,1fr)}
-  .play{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
-  .ws{max-width:min(720px,calc(100dvh - 210px))}
-  .cell{font-size:calc(min(720px,100dvh - 210px) / var(--n,10) * .48)}
+}
+/* computers */
+@media (min-width:1000px){
+  .wrap{max-width:1180px}
+  .play{grid-template-columns:minmax(0,1fr) 360px;gap:28px}
+  .themes{grid-template-columns:repeat(3,1fr)}
   .bubble,.wlist span{font-size:17px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -116,11 +147,11 @@ details[open] summary{margin-bottom:8px}
     <div class="topbar"><button class="backbtn" id="back" type="button">← Temas</button><h2 id="gTitle"></h2></div>
     <div class="lv" id="lv" style="margin-top:10px"></div>
     <div class="play" style="margin-top:12px">
-      <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="side" id="gridCol">
         <div class="strip"><span id="count"></span><span>Puntos: <b id="pts">0</b></span><button class="btn ghost" id="hint" type="button">💡 Pista</button></div>
         <div class="ws" id="grid"></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="side">
         <div class="bubble" id="bubble" aria-live="polite"></div>
         <div class="wlist" id="words"></div>
         <p class="note" id="dirs"></p>
@@ -241,7 +272,7 @@ let theme=null;const pick={};
 function lvUnlocked(th){return Math.min(LVMAX,Math.max(1,(P&&P.levels[th])||1))}
 function renderThemes(){$("themes").innerHTML=Object.keys(THEMES).map(k=>{const t=THEMES[k];return `<button class="theme" id="th-${k}" type="button" data-th="${k}"><span class="ico">${t.ic}</span><b>${t.n}</b><span>${t.d}</span><span class="lvtag">Nivel ${lvUnlocked(k)} de ${LVMAX}</span></button>`}).join("")}
 $("themes").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(!b)return;if(!P){setMsg("Primero escribe tu nombre aquí arriba.");$("pName")&&$("pName").focus();window.scrollTo({top:0,behavior:"smooth"});return}A();theme=b.dataset.th;startGame()});
-function showThemes(){$("vGame").hidden=true;$("vThemes").hidden=false;renderThemes();try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}ping()}
+function showThemes(){$("vGame").hidden=true;$("vThemes").hidden=false;document.body.classList.remove("ingame");renderThemes();try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}ping()}
 $("back").onclick=()=>{try{if(location.hash==="#jugando"){history.back();setTimeout(()=>{if(!$("vGame").hidden)showThemes()},400);return}}catch(e){}showThemes()};
 window.addEventListener("popstate",()=>{if(!$("vGame").hidden)showThemes()});
 function cfg(lv){const ALL=[[1,0],[0,1],[1,1],[-1,0],[0,-1],[-1,-1],[1,-1],[-1,1]];
@@ -252,6 +283,27 @@ function cfg(lv){const ALL=[[1,0],[0,1],[1,1],[-1,0],[0,-1],[-1,-1],[1,-1],[-1,1
 function renderLv(){const u=lvUnlocked(theme),lv=S.level,el=$("lv");
   el.innerHTML=`<button class="btn ghost" id="lvPrev" type="button" aria-label="Nivel anterior"${lv<=1?" disabled":""}>◀</button><span class="lvlabel">Nivel <b>${lv}</b> <small class="note">de ${LVMAX}</small></span><button class="btn ghost" id="lvNext" type="button" aria-label="Nivel siguiente"${lv>=u?" disabled":""}>${lv>=u&&u<LVMAX?"🔒":"▶"}</button>${u>lv+1?`<button class="btn ghost" id="lvMax" type="button">Ir al ${u} ⏩</button>`:""}`;
   $("lvPrev").onclick=()=>{pick[theme]=lv-1;startGame()};$("lvNext").onclick=()=>{pick[theme]=lv+1;startGame()};if($("lvMax"))$("lvMax").onclick=()=>{pick[theme]=u;startGame()}}
+
+/* ---------- fit to the device ---------- */
+let UIZ=1;
+function fitZoom(){let z=1;try{const w=innerWidth;if(w>=1700&&matchMedia("(pointer:fine)").matches)z=Math.min(2.6,w/1450)}catch(e){}
+  UIZ=z;const el=document.querySelector(".wrap");if(el)el.style.zoom=z===1?"":z.toFixed(3)}
+function fitGrid(){
+  const g=$("grid");if(!g||$("vGame").hidden)return;
+  const col=$("gridCol"),z=UIZ;
+  const colW=col.getBoundingClientRect().width/z;                      // room across
+  const above=(g.getBoundingClientRect().top-$("vGame").getBoundingClientRect().top)/z;
+  const vh=(window.visualViewport?visualViewport.height:innerHeight)/z;
+  const availH=vh-above-16;                                          // room down, once the game is at the top
+  const side=window.matchMedia("(min-width:700px) and (orientation:landscape), (min-width:1000px)").matches;
+  let size=side?Math.min(colW,availH):Math.min(colW,Math.max(availH,Math.min(colW,300)));
+  size=Math.max(220,Math.min(size,1100));
+  g.style.width=size+"px";g.style.setProperty("--cell",((size-12)/S.n)+"px");
+}
+let fitT=null;function refit(){clearTimeout(fitT);fitT=setTimeout(()=>{fitZoom();fitGrid()},80)}
+window.addEventListener("resize",refit);window.addEventListener("orientationchange",refit);
+if(window.visualViewport)visualViewport.addEventListener("resize",refit);
+fitZoom();
 
 /* ---------- the word search ---------- */
 const COLS=["#ffc23a","#ff8fa3","#7fd8ff","#4cc38a","#ffa94d","#c3a6ff","#ff6b6b"];
@@ -274,7 +326,7 @@ function startGame(){
   const g=$("grid");g.style.gridTemplateColumns=`repeat(${S.n},1fr)`;g.style.setProperty("--n",S.n);g.innerHTML="";
   S.grid.forEach((ch,i)=>{const d=document.createElement("div");d.className="cell";d.id="c"+i;d.dataset.i=i;d.textContent=ch;g.appendChild(d)});
   try{if(location.hash!=="#jugando")history.pushState(null,"","#jugando")}catch(e){}
-  renderLv();update();$("bubble").textContent=`Nivel ${lv}: hay ${S.words.length} palabras escondidas. Cada una vale ${pts()} puntos. ¡A buscar!`;window.scrollTo({top:0,behavior:"smooth"});ping();
+  document.body.classList.add("ingame");renderLv();update();requestAnimationFrame(fitGrid);$("bubble").textContent=`Nivel ${lv}: hay ${S.words.length} palabras escondidas. Cada una vale ${pts()} puntos. ¡A buscar!`;window.scrollTo({top:0});setTimeout(fitGrid,60);ping();
 }
 function pts(){return 8+2*S.level}
 function update(){
@@ -319,7 +371,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="20261103-175849";
+const APP_VERSION="20261103-180054";
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
   $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
