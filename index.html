@@ -64,6 +64,7 @@ details[open] summary{margin-bottom:8px}
 .theme b{font-size:18px}
 .theme span{color:var(--muted);font-size:13px}
 .theme .lvtag{color:var(--gold);font-weight:800}
+.theme.wide{grid-column:1/-1;border-color:var(--red);background:linear-gradient(90deg,rgba(230,57,70,.22),rgba(255,194,58,.12)),var(--panel)}
 /* game */
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:6px;z-index:5}
 .backbtn{font:inherit;font-weight:900;font-size:16px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;min-height:44px}
@@ -186,6 +187,10 @@ const THEMES={
   cultura:{n:"Arte y cultura",ic:"🎨",d:"Pintores, escritores y símbolos",w:["Quijote","Sancho Panza","Cervantes","Goya","Velázquez","Picasso","Dalí","Miró","Gaudí","Lorca","Guitarra","Castañuelas","Abanico","Mantilla","Siesta","Paellera","Botijo","Peineta","Zarzuela","Sorolla","Murillo","Machado"]}
 };
 for(const k in THEMES)THEMES[k].w=THEMES[k].w.map(l=>({w:gw(l),label:l.toUpperCase()}));
+/* global theme: every word of every theme, without repeats */
+(function(){const seen=new Set(),all=[];for(const k in THEMES)for(const o of THEMES[k].w)if(!seen.has(o.w)){seen.add(o.w);all.push({...o,from:THEMES[k].n})}
+  THEMES.todo={n:"Toda España",ic:"🇪🇸",d:"Mezcla de todos los temas: "+all.length+" palabras",w:all,wide:true}})();
+const ORDER=["todo",...Object.keys(THEMES).filter(k=>k!=="todo")];
 const PRAISE=["¡Bien!","¡Genial!","¡Muy bien!","¡Eso es!","¡Olé!","¡Fantástico!"];
 const LVMAX=50,MAX_RENAMES=2;
 
@@ -270,7 +275,7 @@ const SFX={ok(){if(!A())return;const t=ac.currentTime;[523,659,784,1047].forEach
 /* ---------- themes & levels ---------- */
 let theme=null;const pick={};
 function lvUnlocked(th){return Math.min(LVMAX,Math.max(1,(P&&P.levels[th])||1))}
-function renderThemes(){$("themes").innerHTML=Object.keys(THEMES).map(k=>{const t=THEMES[k];return `<button class="theme" id="th-${k}" type="button" data-th="${k}"><span class="ico">${t.ic}</span><b>${t.n}</b><span>${t.d}</span><span class="lvtag">Nivel ${lvUnlocked(k)} de ${LVMAX}</span></button>`}).join("")}
+function renderThemes(){$("themes").innerHTML=ORDER.map(k=>{const t=THEMES[k];return `<button class="theme${t.wide?" wide":""}" id="th-${k}" type="button" data-th="${k}"><span class="ico">${t.ic}</span><b>${t.n}</b><span>${t.d}</span><span class="lvtag">Nivel ${lvUnlocked(k)} de ${LVMAX}</span></button>`}).join("")}
 $("themes").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(!b)return;if(!P){setMsg("Primero escribe tu nombre aquí arriba.");$("pName")&&$("pName").focus();window.scrollTo({top:0,behavior:"smooth"});return}A();theme=b.dataset.th;startGame()});
 function showThemes(){$("vGame").hidden=true;$("vThemes").hidden=false;document.body.classList.remove("ingame");renderThemes();try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}ping()}
 $("back").onclick=()=>{try{if(location.hash==="#jugando"){history.back();setTimeout(()=>{if(!$("vGame").hidden)showThemes()},400);return}}catch(e){}showThemes()};
@@ -341,7 +346,7 @@ function check(a,b){
   const cells=line(a,b);
   if(cells){const word=cells.map(c=>S.grid[c]).join(""),rev=[...word].reverse().join("");const hit=S.words.find(o=>!S.found.includes(o)&&(o.w===word||o.w===rev));
     if(hit){S.found.push(hit);const col=COLS[S.words.indexOf(hit)%COLS.length];cells.forEach(c=>S.cellCol[c]=col);SFX.ok();
-      P.points+=pts();P.found++;save();update();$("bubble").textContent=`${rnd(PRAISE)} Has encontrado ${hit.label}. +${pts()} puntos.`;
+      P.points+=pts();P.found++;save();update();$("bubble").textContent=`${rnd(PRAISE)} Has encontrado ${hit.label}${hit.from&&theme==="todo"?" ("+hit.from+")":""}. +${pts()} puntos.`;
       if(S.found.length===S.words.length)setTimeout(win,300);return}}
   SFX.bad();update();$("bubble").textContent="Esa no es. ¡Prueba otra vez!";
 }
@@ -371,7 +376,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="20261103-180224";
+const APP_VERSION="20261103-180322";
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
   $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
