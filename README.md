@@ -7,6 +7,7 @@ Sopa de letras para el móvil y el ordenador con **temas de España**: comunidad
 - **Se juega con el dedo**: desliza desde la primera letra hasta la última, o toca la primera y luego la última.
 - **Puntos online con código de jugador** (por ejemplo `SL-7K3Q-9XPA`): sirve para recuperar el progreso en cualquier dispositivo y salir en la **clasificación**.
 - Opciones del jugador: cambiar el nombre (2 veces como máximo), generar un código nuevo y borrar el jugador.
+- **Copia de seguridad**: en *Opciones del jugador*, «Guardar copia de seguridad» descarga un archivo `sopa-progreso-AAAA-MM-DD.json` con los puntos y niveles. Con «Cargar una copia de seguridad» se recupera en otro móvil o en este mismo si se borran los datos del navegador. Sirve también para quien juega sin código.
 - **Aviso de versión nueva** para quien tenga el juego abierto cuando se publica una actualización.
 
 ## Publicarlo con GitHub Pages
@@ -39,5 +40,5 @@ La web consulta `version.json` cada minuto. Cada versión nueva es una *release*
 | `index.html` | El juego completo |
 | `supabase-config.js` | URL y clave pública de Supabase |
 | `supabase.sql` | Script para preparar la base de datos |
-| `version.json` | Número de versión para avisar de actualizaciones |
+| `version.json` | Número de versión (el mismo que `APP_VERSION` y la release) para avisar de actualizaciones |
 | `manifest.webmanifest`, `icon-*.png`, `icon.svg` | Nombre e icono al añadirlo a la pantalla de inicio |
